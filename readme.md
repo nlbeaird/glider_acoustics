@@ -2,8 +2,8 @@
 
 Some notebooks working on processing the AZFP sensor on a glider. 
 
-![Guihen2014](./schematic2.png)
-(Guihen et al 2014,  https://doi.org/10.4319/lom.2014.12.373)
+![Chave2018](./schematic2.png)
+(Chave et al 2018,  https://ieeexplore.ieee.org/document/8604815)
 
 Using [`echopype`](https://github.com/OSOceanAcoustics/echopype) as a base to deal with the raw files
 
