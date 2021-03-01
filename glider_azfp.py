@@ -19,7 +19,47 @@ def load_glider(dataset_id ='ru32-20190102T1317-profile-sci-rt', server = "http:
     # want to have the dimention be time not obs number
     gds = gds.swap_dims({"obs": "time"})
     gds = gds.sortby("time")
+    
+    # drop repeated time values
+    gds = gds.sel(
+        time=~gds.indexes['time'].duplicated())
 
+    
+    # get the seafloor depths too 
+
+    e2 = ERDDAP(
+    server="http://slocum-data.marine.rutgers.edu/erddap",
+    protocol="tabledap",
+    response="nc",
+    )
+
+
+
+    # get some of the raw data:
+    e2.dataset_id = dataset_id[:-14] + 'trajectory-raw-rt' 
+
+    e2.variables = ['time', 'm_water_depth', 'm_pitch']
+
+    # this connects to the data and load into an xarray dataset
+
+    gds_raw = e2.to_xarray().drop_dims('trajectory')
+
+    # want to have the dimention be time not obs number
+
+    gds_raw = gds_raw.swap_dims({"obs": "time"})
+    gds_raw = gds_raw.sortby("time")
+
+    gds_raw = gds_raw.sel(
+        time=~gds_raw.indexes['time'].duplicated())
+
+    # remove bad values:
+    gds_raw['m_water_depth'] = gds_raw.m_water_depth.where(gds_raw.m_water_depth > 10, drop=True)
+
+    gds['bottom_depth'] = gds_raw.m_water_depth.interp_like(gds, method='nearest')
+    
+    
+    
+    
     return gds
 
 
@@ -27,7 +67,7 @@ def merge_glider_AZFP( gds, azfp, min_pitch = -30,
                         max_pitch = -15,
                      varz = ['potential_temperature', 'salinity',
                             'chlorophyll_a','m_pitch',
-                            'm_roll', ]):
+                            'm_roll', 'bottom_depth']):
 
     ''' Merge glider and AZFP, interpolate glider dataset
         onto AZFP pings.
@@ -42,9 +82,6 @@ def merge_glider_AZFP( gds, azfp, min_pitch = -30,
     # also, make the lat, lon, depth into variables for interpolation:
     glider_var_subset = gds[varz].reset_coords()
 
-    # drop repeated time values
-    glider_var_subset = glider_var_subset.sel(
-        time=~glider_var_subset.indexes['time'].duplicated())
 
     # fill na
     segment_gdsnafill = glider_var_subset.interpolate_na(dim='time',
