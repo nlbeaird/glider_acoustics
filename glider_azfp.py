@@ -6,6 +6,9 @@ def load_glider(dataset_id ='ru32-20190102T1317-profile-sci-rt', server = "http:
     ''' Load glider data from erddap.
         input dataset ID and server
         Returns an xarray dataset indexed on time '''
+    
+    # should change: write to_netcdf, then check if netcdf exists
+    
     e = ERDDAP(
                 server=server,
                 protocol="tabledap",
