@@ -80,7 +80,13 @@ def merge_glider_AZFP( gds, azfp, min_pitch = -30,
         min/max pitch: pitch range to isolate downcasts
         varz: list of glider variables to return in merged ds
         Returns merged xarray dataset'''
-
+    
+    # subset the glider data to the azfp file time
+    start_time = azfp.ping_time[0]
+    end_time = azfp.ping_time[-1] 
+    gds = gds.sel( time = slice(start_time,end_time) )
+    
+    
     # subset variables
     # also, make the lat, lon, depth into variables for interpolation:
     glider_var_subset = gds[varz].reset_coords()
@@ -120,9 +126,28 @@ def merge_glider_AZFP( gds, azfp, min_pitch = -30,
 
     # make bin_depths a coordinate:
     ds = ds.set_coords('bin_depths')
-
+    
+    # only keep data within a pitch range
     inds = (ds.m_pitch*180/np.pi < max_pitch) & (ds.m_pitch*180/np.pi > min_pitch)
-
     ds = ds.where(inds, drop=True)
+    
+    # get a distance coordinate
+    dist = get_dist_from_point( ds.latitude, ds.longitude, 
+                           ds.latitude[0], ds.longitude[0])
+    ds = ds.assign_coords(distance = ('ping_time', dist))
 
     return ds
+
+
+
+def get_dist_from_point( inlat, inlon, origlat, origlon):
+    """ return a vector of distances from an origin """
+    import geopy.distance
+    out_vec = np.empty_like(inlon) 
+    
+    for j in range(len(inlon)):
+        if np.isnan(inlon[j]):
+            out_vec[j] = np.NaN
+        else:
+            out_vec[j] = geopy.distance.distance((inlat[j], inlon[j]), (origlat, origlon)).m
+    return out_vec
