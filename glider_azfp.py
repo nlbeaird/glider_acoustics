@@ -39,7 +39,8 @@ def load_glider(dataset_id ='ru32-20190102T1317-profile-sci-rt', server = "http:
 
 
     # get some of the raw data:
-    e2.dataset_id = dataset_id[:-14] + 'trajectory-raw-rt' 
+#     e2.dataset_id = dataset_id[:-14] + 'trajectory-raw-rt' 
+    e2.dataset_id = dataset_id.replace('profile-sci', 'trajectory-raw')
 
     e2.variables = ['time', 'm_water_depth', 'm_pitch']
 
