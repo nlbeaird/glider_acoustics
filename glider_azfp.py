@@ -91,6 +91,17 @@ def merge_glider_AZFP( gds, azfp, min_pitch = -30,
     # subset variables
     # also, make the lat, lon, depth into variables for interpolation:
     glider_var_subset = gds[varz].reset_coords()
+    
+        # check if bottom depth has more than 2 points:
+    nbottom_obs = np.count_nonzero(~np.isnan(glider_var_subset.bottom_depth))
+    
+    if nbottom_obs < 1: # if no bottom data, set to dive depth max
+        glider_var_subset['bottom_depth'] = glider_var_subset.depth.max()*xr.ones_like(glider_var_subset.depth)
+        
+    elif nbottom_obs < 3: # if some bottom data, set to mean
+        glider_var_subset['bottom_depth'] = glider_var_subset.bottom_depth.mean()*xr.ones_like(glider_var_subset.depth)
+        
+    # fill na
 
 
     # fill na
